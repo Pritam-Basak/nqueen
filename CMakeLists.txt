@@ -3,13 +3,12 @@ project(NQueenSolver)
 
 set(CMAKE_CXX_STANDARD 11)
 
-# Include FLTK
-set(FLTK_SKIP_FLUID TRUE)
+# Tell CMake to find FLTK (used by GitHub workflow with -DCMAKE_PREFIX_PATH)
 find_package(FLTK REQUIRED NO_MODULE)
 
 add_executable(nqueen main.cpp)
 
-# Link required FLTK libs
+# Required for image handling (Fl_PNG_Image)
 target_link_libraries(nqueen
     fltk
     fltk_images
