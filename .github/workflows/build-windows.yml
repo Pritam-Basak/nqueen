@@ -15,7 +15,9 @@ jobs:
 
     - name: Install dependencies
       run: |
-        choco install mingw cmake --yes
+        choco install mingw --yes
+        choco install cmake --version=3.24.2 --allow-downgrade -y
+
 
     - name: Add MinGW to PATH
       run: echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $env:GITHUB_PATH
