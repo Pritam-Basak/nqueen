@@ -13,26 +13,54 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Install dependencies
+    - name: Install MinGW and CMake
       run: |
         choco install mingw --yes
         choco install cmake --version=3.24.2 --allow-downgrade -y
 
-
     - name: Add MinGW to PATH
       run: echo "C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin" >> $env:GITHUB_PATH
 
-    - name: Download and Build FLTK
+    - name: Build zlib
+      run: |
+        curl -L -o zlib.tar.gz https://zlib.net/zlib1211.tar.gz
+        tar -xzf zlib.tar.gz
+        mkdir zlib-1.2.11/build
+        cd zlib-1.2.11/build
+        cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+        cmake --build .
+      shell: bash
+
+    - name: Build libpng
+      run: |
+        curl -L -o libpng.tar.gz https://download.sourceforge.net/libpng/libpng-1.6.39.tar.gz
+        tar -xzf libpng.tar.gz
+        mkdir libpng-1.6.39/build
+        cd libpng-1.6.39/build
+        cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release \
+          -DPNG_SHARED=OFF \
+          -DZLIB_LIBRARY=../../zlib-1.2.11/build/libzlibstatic.a \
+          -DZLIB_INCLUDE_DIR=../../zlib-1.2.11
+        cmake --build .
+      shell: bash
+
+    - name: Build FLTK
       run: |
         curl -L -o fltk.tar.gz https://www.fltk.org/pub/fltk/1.3.8/fltk-1.3.8-source.tar.gz
         tar -xzf fltk.tar.gz
         mkdir fltk-1.3.8/build
         cd fltk-1.3.8/build
-        cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+        cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release \
+          -DOPTION_USE_PNG=ON \
+          -DOPTION_USE_ZLIB=ON \
+          -DPNG_LIBRARY=../../libpng-1.6.39/build/libpng16_static.a \
+          -DPNG_PNG_INCLUDE_DIR=../../libpng-1.6.39 \
+          -DZLIB_LIBRARY=../../zlib-1.2.11/build/libzlibstatic.a \
+          -DZLIB_INCLUDE_DIR=../../zlib-1.2.11
         cmake --build . --config Release
       shell: bash
 
-    - name: Configure Your Project
+    - name: Configure your project
       run: |
         mkdir build
         cd build
@@ -42,7 +70,7 @@ jobs:
     - name: Build your project
       run: cmake --build build
 
-    - name: Prepare zip package
+    - name: Package EXE and PNG
       run: |
         mkdir dist
         cp build/nqueen.exe dist/
@@ -50,7 +78,7 @@ jobs:
         cd dist
         powershell Compress-Archive -Path * -DestinationPath ../nqueen_bundle.zip
 
-    - name: Upload zip artifact
+    - name: Upload .zip Artifact
       uses: actions/upload-artifact@v4
       with:
         name: NQueen-Windows-Bundle
