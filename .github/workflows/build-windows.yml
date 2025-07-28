@@ -22,14 +22,13 @@ jobs:
 
     - name: Download and Build FLTK
       run: |
-        curl -L -o fltk.zip https://www.fltk.org/pub/fltk/1.3.8/fltk-1.3.8-source.zip
+        curl -L -o fltk.zip https://github.com/fltk/fltk/releases/download/1.3.8/fltk-1.3.8-source.zip
         powershell Expand-Archive -Path fltk.zip -DestinationPath fltk-1.3.8
         mkdir fltk-1.3.8/build
         cd fltk-1.3.8/build
         cmake .. -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
         cmake --build . --config Release
       shell: bash
-
 
     - name: Configure Your Project
       run: |
